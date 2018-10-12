@@ -20,7 +20,7 @@ processingCompute =function(data ,tree){
   data1=unique(data1[,.(geographicAreaM49_fi, timePointYears, ics, availability)])
   setnames(data1,"ics" ,"parent")
   data1[, parent:=as.character(parent)]
-  data1=merge(data1, commodityTreeLev0, by="parent", allow.cartesian = TRUE)
+  data1=merge(data1, tree, by="parent", allow.cartesian = TRUE)
   
   #### We are currently working with commodityTree0 this means that all weights are 1.
   data1[, avChildEq:=availability*extraction_rate]
@@ -40,7 +40,11 @@ processingCompute =function(data ,tree){
                        by= c("geographicAreaM49_fi" ,"child", "timePointYears"),
                        suffixes = c("_parent", "_child") )
   
-  SUA_processing[, foodProcessing:=(Value*weight)/extraction_rate]
+  SUA_processing[, foodProcessing:=((Value*weight)/extraction_rate)*shareDownUp]
+
+  ## This is to populate the element: 31
+  SUA_input= SUA_processing[,.(geographicAreaM49_fi,child,timePointYears,foodProcessing)]
+  
   
   SUA_processing[,foodProcessing:=sum(foodProcessing, na.rm = TRUE), by=c("geographicAreaM49_fi",
                                                                           "timePointYears",
@@ -54,11 +58,15 @@ processingCompute =function(data ,tree){
   SUA_processing[,measuredElement:="131"]
   setnames(SUA_processing, c("parent", "foodProcessing"), c("ics", "Value"))
   
+  SUA_input=unique(SUA_input )
+  SUA_input[,measuredElement:="31"]
+  setnames(SUA_input, c("child", "foodProcessing"), c("ics", "Value"))
+  
   data[,availability:=NULL]
   data[,flagObservationStatus:=NULL]
   data[,flagMethod:=NULL]
   
-  return(rbind(data, SUA_processing))
+  return(rbind(data, SUA_processing,SUA_input ))
   
   
 }
