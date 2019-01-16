@@ -14,7 +14,39 @@ suppressMessages({
   library(ggplot2)
   }) 
 
-##Pull data from a local CSV file (downloaded form fishStatJ) and reshape it:
+# 
+#  if(CheckDebug()){
+#    
+#    SETTINGS = ReadSettings("sws1.yml")
+#    
+#    ## If you're not on the system, your settings will overwrite any others
+#    R_SWS_SHARE_PATH = SETTINGS[["share"]]
+#    
+#    ## Define where your certificates are stored
+#    SetClientFiles(SETTINGS[["certdir"]])
+#    
+#    ## Get session information from SWS. Token must be obtained from web interface
+#    GetTestEnvironment(baseUrl = SETTINGS[["server"]],
+#                       token = SETTINGS[["token"]])
+#    
+#  }
+#  
+#  KeyCommodityDB = DatasetKey(domain = "Fisheries", dataset = "fi_commodity_db", dimensions = list(
+#    geographicAreaM49 = Dimension(name = "geographicAreaM49", keys = currentCountry),
+#    measuredItemISSCFC = Dimension(name = "measuredItemISSCFC", keys = GetCodeList("Fisheries", "fi_commodity_db","measuredItemISSCFC" )[,code]),
+#    measuredElement = Dimension(name = "measuredElement", keys = c("5510")),
+#    timePointYears = Dimension(name = "timePointYears", keys = as.character(c(2000:2016) ))
+#  ))
+#  
+#  ##Get Global Production Data
+#  commodityDB_quantity=GetData(KeyCommodityDB)
+
+
+##########################################################################################################################################################
+## Pull data from a local CSV file (downloaded form fishStatJ) and reshape it: line 45-98 won't be used anymore, once
+## the commodity DB will be properly migrated in the SWS the GetData function (line 41) will pull data directly from the SWS
+## together with FLAGS!
+
 commodityDB_quantity = fread("data/commodityDB_Quantity.csv", header = TRUE)
 commodityDB_quantity = melt(
   commodityDB_quantity,
@@ -24,8 +56,6 @@ commodityDB_quantity = melt(
   value.name = "Value"
 )
 commodityDB_quantity[, timePointYears := as.numeric(as.character(timePointYears))]
-
-
 
 #Prof of concept: impute figures for 2014, 2015, 2016
 
@@ -70,7 +100,7 @@ commodityDB_quantity=commodityDB_quantity[,.(Country_code,
                                              flagMethod)]
 
 setnames(commodityDB_quantity, c("Country_code","ISSCFC_Code"), c("geographicAreaM49","measuredItemISSCFC"))
-
+##########################################################################################################################################################
 
 ## Rename this dataset: is the reference to test my output.
 ## I copy the commodityDB_quantity without any modification (except for flags), and I will use this data.table 
@@ -128,7 +158,7 @@ commodityDB_quantityImputed=imputeVariable(commodityDB_quantity[measuredElement=
 
 commodityDB_quantityImputed=commodityDB_quantityImputed[timePointYears>2013]
 
-
+#SaveData(commodityDB_quantityImputed)
 ##############################################################################################################
 
 ## Re-shape the just imputed 
@@ -141,6 +171,7 @@ compareImputedvsNot=rbind(Plot_imputed,trade_commodityDB_quantity)
 
 commodityDB_quantityImputedCheck1=merge(commodityDB_quantity, commodityDB_quantityImputed, by=c("measuredElement", "geographicAreaM49", "measuredItemISSCFC", "timePointYears"),
       suffixes = c("_preImp", "_postImp"), all.y = TRUE)
+
 
 
 plotCompare(compareImputedvsNot,geoVar="geographicAreaM49",elVar="measuredElement", elVector="51",itemVar="measuredItemISSCFC", 
