@@ -103,6 +103,7 @@ for(j in seq_along(countries)) {
   }
   
   
+  ## I aggregate the data referring to FishingArea 
   globalProduction=globalProduction[,sum(Value, na.rm = TRUE), by=c("geographicAreaM49_fi",
                                                                     "fisheriesAsfis",
                                                                     "measuredElement",
@@ -110,8 +111,9 @@ for(j in seq_along(countries)) {
   setnames(globalProduction, "V1", "Value")
   
   ## Work on flags: aggragate observationFlag!!
-  #globalProduction[,flagObservationStatus:=""]
-  #globalProduction[,flagMethod:="c"]
+  ## All Values different from zero are flagged as "". Are they all OFFICIAL??  
+  ## globalProduction[,flagObservationStatus:=""]
+  ## globalProduction[,flagMethod:="c"]
   
   #globalProduction=globalProduction[!duplicated(globalProduction)]
   mapping=ReadDatatable("fishery_item_mapping")
@@ -140,37 +142,43 @@ for(j in seq_along(countries)) {
   
   globalProductionMapping=globalProductionMapping[ics %in% primary]
   
+  
+  ##
   globalProductionMapping=globalProductionMapping[,.(geographicAreaM49_fi,
                                                      timePointYears,
                                                      ics,
                                                      measuredElement,
                                                      Value)]
+  
+  
   globalProductionMapping[, Value := sum(Value, na.rm = TRUE), by = list(geographicAreaM49_fi,
                                                                          timePointYears,
                                                                          measuredElement,
                                                                          ics)]
   
   globalProductionMapping = globalProductionMapping[!duplicated(globalProductionMapping)]
+  
   globalProductionMapping=globalProductionMapping[!is.na(ics)]
+  
   ############################################################################################################
-  ##Get Commodity Database, still local files (no commodity )
-  commodityDB_value = fread("data/commodityDB_Value.csv", header = TRUE)
-  ## Re-shape the data in order to have the year-dimension in one column
-  ## Ensure that the Value column is numeric and that the missing values are properly classified as NA
-  ##Value
-  commodityDB_value = melt(
-    commodityDB_value,
-    id.vars = colnames(commodityDB_value)[c(1:7)],
-    measure.vars = colnames(commodityDB_value)[c(8:48)],
-    variable.name = "timePointYears",
-    value.name = "Value"
-  )
-  ## Inconsistency in terms of flow codes, trade flows referring to Values have different codes
-  commodityDB_value[, measuredElement := as.character(measuredElement)]
-  commodityDB_value[measuredElement=="91", measuredElement:="92"]
-  commodityDB_value[measuredElement=="61", measuredElement:="62"]
-  commodityDB_value[measuredElement=="51", measuredElement:="52"]
-  commodityDB_value[, Value := as.numeric(Value)]
+ # ##Get Commodity Database, still local files (no commodity )
+ # commodityDB_value = fread("data/commodityDB_Value.csv", header = TRUE)
+ # ## Re-shape the data in order to have the year-dimension in one column
+ # ## Ensure that the Value column is numeric and that the missing values are properly classified as NA
+ # ##Value
+ # commodityDB_value = melt(
+ #   commodityDB_value,
+ #   id.vars = colnames(commodityDB_value)[c(1:7)],
+ #   measure.vars = colnames(commodityDB_value)[c(8:48)],
+ #   variable.name = "timePointYears",
+ #   value.name = "Value"
+ # )
+ # ## Inconsistency in terms of flow codes, trade flows referring to Values have different codes
+ # commodityDB_value[, measuredElement := as.character(measuredElement)]
+ # commodityDB_value[measuredElement=="91", measuredElement:="92"]
+ # commodityDB_value[measuredElement=="61", measuredElement:="62"]
+ # commodityDB_value[measuredElement=="51", measuredElement:="52"]
+ # commodityDB_value[, Value := as.numeric(Value)]
   
   ## Quantity
   #  KeyCommodityDB = DatasetKey(domain = "Fisheries", dataset = "fi_commodity_db", dimensions = list(
@@ -180,7 +188,7 @@ for(j in seq_along(countries)) {
   #    timePointYears = Dimension(name = "timePointYears", keys = as.character(c(startYear:endYear) ))
   #  ))
   #  
-  #  ##Get Global Production Data
+  #  ##Get CommodityDB 
   #  commodityDB_quantity=GetData(KeyCommodityDB)
   
   commodityDB_quantity = fread("data/commodityDB_Quantity.csv", header = TRUE)
@@ -195,10 +203,13 @@ for(j in seq_along(countries)) {
   commodityDB_quantity[,Value:=gsub("F","" ,Value)]
   
   commodityDB_quantity[, Value := as.numeric(Value)]
+  ##The warning is normal: the "..." are transformed in NA which is exactly what we want!
+  
   commodityDB_quantity[, measuredElement := as.character(measuredElement)]
   
   ##############################################################################################################
-  commodityDB = rbind(commodityDB_value, commodityDB_quantity)
+  #commodityDB = rbind(commodityDB_value, commodityDB_quantity)
+  commodityDB = rbind( commodityDB_quantity)
   commodityDB=commodityDB[Country_code==currentCountry]
   ##############################################################################################################
   
@@ -248,9 +259,10 @@ for(j in seq_along(countries)) {
   link=ReadDatatable("link_mapping")
   link[, check:=sum(percentage), by=c("geographic_area_m49","flow","from_code","start_year","end_year")]
   
-  link[check>1] ##send a worning: there is a double counting.
+  link[check!=1] ##send a warning: there is a double counting.
+  ## send email containing as attachment those lines of the link table than did not pass the check.
   
-  link=link[check<=1]
+  link=link[check<=1,]
   
   split=link[check!=1]
   split=unique( split[,.(geographic_area_m49 ,flow ,start_year, end_year ,from_code, check)] )
@@ -322,6 +334,7 @@ for(j in seq_along(countries)) {
     
     sua_commodityDB=merge(sua_commodityDB, linkNew, by=c("Country_code","timePointYears", "measuredElement","ics"), all.x = TRUE)
     sua_commodityDB[, percentage:=as.numeric(percentage)]
+    
     sua_commodityDB[!is.na(percentage), Value:=Value*percentage]
     sua_commodityDB[!is.na(to_code), ics:=to_code]
     sua_commodityDB[, percentage:=NULL]
