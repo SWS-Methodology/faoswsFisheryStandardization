@@ -1,0 +1,30 @@
+Package: faoswsFisheryStandardization
+Type: Package
+Title: Package to compute Fishery FBS
+Version: 0.1
+Date: 2018-03-10
+Authors@R: c(person("Francesca", "Rosa", role = "cre", email = "francesca.rosa@fao.org"))
+Description: Package to compute Fishery FBS
+URL: https://github.com/SWS-Methodology/faoswsFisheryStandardization
+License: GPL (>= 3)
+Depends:
+    faoswsFlag (>= 0.1.0),
+    faoswsImputation,
+    faoswsUtil,
+    faoswsProcessing,
+    faoswsEnsure,
+    data.table (>= 1.9.2)
+swsDatasetDepends: agriculture:aproduction,
+    item_type_yield_elements
+swsModuleDepends:
+LazyData: yes
+ZipData: no
+VignetteBuilder: knitr
+Suggests:
+    knitr,
+    ggplot2,
+    faosws,
+    xtable,
+    testthat
+Encoding: UTF-8
+RoxygenNote: 6.1.0
