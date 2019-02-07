@@ -1,4 +1,4 @@
-##  This routine 
+##  This plugin is 
 ##
 ##
 
@@ -113,7 +113,8 @@ trade_commodityDB_quantity=trade_commodityDB_quantity[(!is.na(Value) & !is.na(fl
 ## discard TRADE
 commodityDB_quantity=commodityDB_quantity[measuredElement=="51"]
 
-## It is important to fill missing record only to those series that are currently open.
+## It is important to fill missing records only to those series that are currently open.
+## Are defined "open series "
 ## It is not simple to identify the cell that are empty because no data must be there from 
 ## missing data that has to be imputed through
 

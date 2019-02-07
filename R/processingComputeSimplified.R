@@ -95,6 +95,8 @@ processingComputeSimplified =function(data ,tree){
   setnames(data_compute131, "ics", "child")
   data_compute131=merge(data_compute131, treePrimary, by=c("geographicAreaM49_fi","child", "timePointYears"))
   
+  
+  
   data_compute131[ measuredElement=="31" , processing:=sum(Value, na.rm = TRUE), by=c("geographicAreaM49_fi",
                                                                "timePointYears",
                                                                "parent")]
@@ -108,10 +110,10 @@ processingComputeSimplified =function(data ,tree){
 
   setnames(data_compute131, "parent", "ics")
   
-  ## The 'food processing' has been just computed for anly Primary Parent, 
+  ## The 'food processing' has been just computed for any Primary Parent, 
   ## we have to compare the 'new component' based on the sum of all the child-input
   ## with the actual primary availability, in order to be sure that the new availabily
-  ## (computed including the nw food processing in the primary SUA line) does not produce
+  ## (computed including the just computed food processing in the primary SUA line) does not produce
   ## a negative unbalance.
   
   data_compute131=merge(data, data_compute131, by=c( "geographicAreaM49_fi","ics","timePointYears"), all.x = TRUE)

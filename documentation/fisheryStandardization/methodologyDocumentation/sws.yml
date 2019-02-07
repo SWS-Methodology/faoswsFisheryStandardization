@@ -1,0 +1,15 @@
+current: qa
+qa:
+
+  certdir: C:/Users/Rosa/Favorites/Github/.R/QA
+  server: https://hqlqasws1.hq.un.fao.org:8181/sws
+  token: 460220a7-9821-4d68-b429-d88ad3f73470
+  share: "Z:"
+  
+  
+production:
+  certdir: C:/Users/Rosa/Favorites/Github/.R/Production
+  server: https://hqlprswsas1.hq.un.fao.org:8181/sws
+  token: 06fe7ed4-08c8-4123-9ffb-a165289e7142
+  share: "Z:"
+    

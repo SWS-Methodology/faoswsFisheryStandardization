@@ -6,7 +6,7 @@
 ##' @param standParas list tttt
 ##' @param zeroWeight vector co-product
 ##'
-##'  @export
+##' @export
 
 standTree = function(data, tree, elements,standParams, zeroWeight){
   
