@@ -29,24 +29,9 @@ if(CheckDebug()){
   GetTestEnvironment(baseUrl = SETTINGS[["server"]],
                      token = SETTINGS[["token"]])
   
-  startYear = 2000
-  endYear   = 2016
-  
 }
 
-## The list of countries the plugin will work on depends on the query the user set in creating the session
-## The user may select one or more countries that will be processed in order to produced consistent 
-## SUA tables and FBS
-
-## sessionKey = swsContext.datasets[[1]]
-## countries=sessionKey@dimensions$geographicAreaM49_fi
-## startYear= swsContext.computationParams@startYear
-## endYear= swsContext.computationParams@endYear
-
-
-
-if(CheckDebug()){
-batchNumb=992
+batchNumb=6
 
 dir.create(paste0("C:/Users/ROSA/Desktop/Fisheries/batch", batchNumb,"/SUA_unbalanced"), recursive = TRUE)
 dir.create(paste0("C:/Users/ROSA/Desktop/Fisheries/batch", batchNumb,"/SUA_balanced"), recursive = TRUE)
@@ -54,11 +39,10 @@ dir.create(paste0("C:/Users/ROSA/Desktop/Fisheries/batch", batchNumb,"/FBS"), re
 dir.create(paste0("C:/Users/ROSA/Desktop/Fisheries/batch", batchNumb,"/plot"), recursive = TRUE)
 
 directory=paste0("C:/Users/ROSA/Desktop/Fisheries/batch", batchNumb)
-}
 
 ## Im still working on three pilot countries:
-countries=c("300", "203" , "40", "246", "156", "792","643","268")
-
+countries=c("300", "203" , "40")
+#countries=c("156")
 sua_unb=list()
 
 
@@ -76,7 +60,7 @@ for(j in seq_along(countries)) {
     fisheriesCatchArea = Dimension(name = "fisheriesCatchArea", keys = GetCodeList("Fisgheries", "fi_global_production","fisheriesCatchArea" )[,code]),
     measuredElement = Dimension(name = "measuredElement", keys = c("FI_001")),
     #timePointYears = Dimension(name = "timePointYears", keys = GetCodeList("Fisgheries", "fi_global_production","timePointYears" )[,code] )
-    timePointYears = Dimension(name = "timePointYears", keys = as.character(c(startYear:endYear) ))
+    timePointYears = Dimension(name = "timePointYears", keys = as.character(c(2000:2016) ))
   ))
   
   ##Get Global Production Data
@@ -103,7 +87,6 @@ for(j in seq_along(countries)) {
   }
   
   
-  ## I aggregate the data referring to FishingArea 
   globalProduction=globalProduction[,sum(Value, na.rm = TRUE), by=c("geographicAreaM49_fi",
                                                                     "fisheriesAsfis",
                                                                     "measuredElement",
@@ -111,9 +94,8 @@ for(j in seq_along(countries)) {
   setnames(globalProduction, "V1", "Value")
   
   ## Work on flags: aggragate observationFlag!!
-  ## All Values different from zero are flagged as "". Are they all OFFICIAL??  
-  ## globalProduction[,flagObservationStatus:=""]
-  ## globalProduction[,flagMethod:="c"]
+  #globalProduction[,flagObservationStatus:=""]
+  #globalProduction[,flagMethod:="c"]
   
   #globalProduction=globalProduction[!duplicated(globalProduction)]
   mapping=ReadDatatable("fishery_item_mapping")
@@ -142,55 +124,39 @@ for(j in seq_along(countries)) {
   
   globalProductionMapping=globalProductionMapping[ics %in% primary]
   
-  
-  ##
   globalProductionMapping=globalProductionMapping[,.(geographicAreaM49_fi,
                                                      timePointYears,
                                                      ics,
                                                      measuredElement,
                                                      Value)]
-  
-  
   globalProductionMapping[, Value := sum(Value, na.rm = TRUE), by = list(geographicAreaM49_fi,
                                                                          timePointYears,
                                                                          measuredElement,
                                                                          ics)]
   
   globalProductionMapping = globalProductionMapping[!duplicated(globalProductionMapping)]
-  
   globalProductionMapping=globalProductionMapping[!is.na(ics)]
-  
   ############################################################################################################
- # ##Get Commodity Database, still local files (no commodity )
- # commodityDB_value = fread("data/commodityDB_Value.csv", header = TRUE)
- # ## Re-shape the data in order to have the year-dimension in one column
- # ## Ensure that the Value column is numeric and that the missing values are properly classified as NA
- # ##Value
- # commodityDB_value = melt(
- #   commodityDB_value,
- #   id.vars = colnames(commodityDB_value)[c(1:7)],
- #   measure.vars = colnames(commodityDB_value)[c(8:48)],
- #   variable.name = "timePointYears",
- #   value.name = "Value"
- # )
- # ## Inconsistency in terms of flow codes, trade flows referring to Values have different codes
- # commodityDB_value[, measuredElement := as.character(measuredElement)]
- # commodityDB_value[measuredElement=="91", measuredElement:="92"]
- # commodityDB_value[measuredElement=="61", measuredElement:="62"]
- # commodityDB_value[measuredElement=="51", measuredElement:="52"]
- # commodityDB_value[, Value := as.numeric(Value)]
+  ##Get Commodity Database, still local files (no commodity )
+  commodityDB_value = fread("data/commodityDB_Value.csv", header = TRUE)
+  ## Re-shape the data in order to have the year-dimension in one column
+  ## Ensure that the Value column is numeric and that the missing values are properly classified as NA
+  ##Value
+  commodityDB_value = melt(
+    commodityDB_value,
+    id.vars = colnames(commodityDB_value)[c(1:7)],
+    measure.vars = colnames(commodityDB_value)[c(8:48)],
+    variable.name = "timePointYears",
+    value.name = "Value"
+  )
+  ## Inconsistency in terms of flow codes, trade flows referring to Values have different codes
+  commodityDB_value[, measuredElement := as.character(measuredElement)]
+  commodityDB_value[measuredElement=="91", measuredElement:="92"]
+  commodityDB_value[measuredElement=="61", measuredElement:="62"]
+  commodityDB_value[measuredElement=="51", measuredElement:="52"]
+  commodityDB_value[, Value := as.numeric(Value)]
   
-  ## Quantity
-  #  KeyCommodityDB = DatasetKey(domain = "Fisheries", dataset = "fi_commodity_db", dimensions = list(
-  #    geographicAreaM49 = Dimension(name = "geographicAreaM49", keys = currentCountry),
-  #    measuredItemISSCFC = Dimension(name = "measuredItemISSCFC", keys = GetCodeList("Fisheries", "fi_commodity_db","measuredItemISSCFC" )[,code]),
-  #    measuredElement = Dimension(name = "measuredElement", keys = c("5510", "5610", "5910")),
-  #    timePointYears = Dimension(name = "timePointYears", keys = as.character(c(startYear:endYear) ))
-  #  ))
-  #  
-  #  ##Get CommodityDB 
-  #  commodityDB_quantity=GetData(KeyCommodityDB)
-  
+  ##Quantity
   commodityDB_quantity = fread("data/commodityDB_Quantity.csv", header = TRUE)
   commodityDB_quantity = melt(
     commodityDB_quantity,
@@ -203,13 +169,10 @@ for(j in seq_along(countries)) {
   commodityDB_quantity[,Value:=gsub("F","" ,Value)]
   
   commodityDB_quantity[, Value := as.numeric(Value)]
-  ##The warning is normal: the "..." are transformed in NA which is exactly what we want!
-  
   commodityDB_quantity[, measuredElement := as.character(measuredElement)]
   
   ##############################################################################################################
-  #commodityDB = rbind(commodityDB_value, commodityDB_quantity)
-  commodityDB = rbind( commodityDB_quantity)
+  commodityDB = rbind(commodityDB_value, commodityDB_quantity)
   commodityDB=commodityDB[Country_code==currentCountry]
   ##############################################################################################################
   
@@ -232,7 +195,7 @@ for(j in seq_along(countries)) {
   otherUses=fread("data/otherUses.csv")
   
   for(otherUsesItem in seq_along(unique(otherUses[,isscfc]))  ){
-    commodityDB_aggregation[isscfc %in% otherUses[,unique(isscfc)][otherUsesItem] & measuredElement=="61", 
+    commodityDB_aggregation[isscfc %in% otherUses[,unique(isscfc)][otherUsesItem] & measuredElement=="62", 
                               measuredElement:=otherUses[isscfc== otherUses[,unique(isscfc)][otherUsesItem] ,unique(measuredElement)]]
   }
   
@@ -257,17 +220,11 @@ for(j in seq_along(countries)) {
   #########################################################################################################################
   
   link=ReadDatatable("link_mapping")
-  
-  link=link[geographic_area_m49==currentCountry]
-  link=(unique(link))
-  
-  
   link[, check:=sum(percentage), by=c("geographic_area_m49","flow","from_code","start_year","end_year")]
   
-  link[check!=1] ##send a warning: there is a double counting.
-  ## send email containing as attachment those lines of the link table than did not pass the check.
+  link[check>1] ##send a worning: there is a double counting.
   
-  link=link[check<=1,]
+  link=link[check<=1]
   
   split=link[check!=1]
   split=unique( split[,.(geographic_area_m49 ,flow ,start_year, end_year ,from_code, check)] )
@@ -277,7 +234,8 @@ for(j in seq_along(countries)) {
   link=rbind(link, split)
   link[,check:=NULL]
   
-
+  link=link[geographic_area_m49==currentCountry]
+  link=(unique(link))
   if(nrow(link)>0){
     
     lastYear=max(as.numeric(as.character(commodityDB[,timePointYears])))
@@ -307,15 +265,9 @@ for(j in seq_along(countries)) {
     for(i in 1:dim(link)[1]){
       timePointYears=data.table(timePointYears=c(link[i,start_year]:link[i,end_year]))
       iter= link[i]
-      if(iter[,nYear]>1){
       iter= data.table(apply(iter, 2, rep, iter[,nYear]))
       linkNew[[i]]=data.table(iter, timePointYears=c(unique(iter[1,start_year]):unique(iter[1,end_year])) )
-      }else{
-        linkNew[[i]]=data.table(iter, timePointYears=c(unique(iter[1,start_year]):unique(iter[1,end_year])) )
-      }
-      
     }
-    
     linkNew=rbindlist(linkNew)
     
     linkNew[,start_year:=NULL]
@@ -338,7 +290,6 @@ for(j in seq_along(countries)) {
     
     sua_commodityDB=merge(sua_commodityDB, linkNew, by=c("Country_code","timePointYears", "measuredElement","ics"), all.x = TRUE)
     sua_commodityDB[, percentage:=as.numeric(percentage)]
-    
     sua_commodityDB[!is.na(percentage), Value:=Value*percentage]
     sua_commodityDB[!is.na(to_code), ics:=to_code]
     sua_commodityDB[, percentage:=NULL]
@@ -363,7 +314,7 @@ for(j in seq_along(countries)) {
   
   SUA=rbind(sua_commodityDB, globalProductionMapping)
   
-
+  balancingItems=fread(paste0("C:/Users/ROSA/Desktop/Fisheries/batch0_SUA_pilotCounties/utilizationTables/balancingElements/balancingElements_",currentCountry,".csv"), header = TRUE)
   
   
   SUA[measuredElement=="FI_001", measuredElement:="51"]
@@ -381,7 +332,7 @@ for(j in seq_along(countries)) {
   keyDataFrame = SUA[, key, with = FALSE]
   keyDataFrame=keyDataFrame[with(keyDataFrame, order(get(key)))]
   keyDataFrame=keyDataFrame[!duplicated(keyDataFrame)]
-  elDataFrame = c("51","61","91","71","111","121", "141", "151", "131", "101", "31", "131")
+  elDataFrame = c("51","61","91","71","111","121", "141", "151", "131", "101")
   ##elDataFrame = c("51","61","91","141")
   #elDataFrame = unique(SUA[,.(measuredElement)])
   elDataFrame=data.table(elVar=elDataFrame)
@@ -395,38 +346,26 @@ for(j in seq_along(countries)) {
   SUA=expandedData
 
   
-  protected=fread(paste0("data/localRun/protected/",currentCountry,"_protected.csv"), header = TRUE)
-  protected[,geographicAreaM49_fi:=as.character(geographicAreaM49_fi)]
-  protected[,ics:=as.character(ics)]
-  protected[,measuredElement:=as.character(measuredElement)]
-  protected[,timePointYears:=as.factor(timePointYears)]
-  
-  SUA=merge(SUA, protected, by=c("geographicAreaM49_fi","ics","timePointYears","measuredElement"),suffixes = c("","_protected"),all.x = TRUE)
-  SUA[!is.na(Value_protected),Value:=Value_protected]
-  SUA[,Value_protected:=NULL]
+  #protected=fread("C:/Users/ROSA/Desktop/Fisheries/batch0_SUA_pilotCounties/utilizationTables/china_protected.csv", header = TRUE)
+  #protected[,geographicAreaM49_fi:=as.character(geographicAreaM49_fi)]
+  #protected[,ics:=as.character(ics)]
+  #protected[,measuredElement:=as.character(measuredElement)]
+  #protected[,timePointYears:=as.factor(timePointYears)]
+  #
+  #SUA=merge(SUA, protected, by=c("geographicAreaM49_fi","ics","timePointYears","measuredElement"),suffixes = c("","_protected"),all.x = TRUE)
+  #SUA[!is.na(Value_protected),Value:=Value_protected]
+  #SUA[,Value_protected:=NULL]
   
   
   
   SUA=SUA[timePointYears %in% c(2000:2016)]
   #########################################################################################################################
   ## Compute the imbalance==availability
-  ## 151
-  ## 141
-  ## 121
-  ## 111
-  
   
   SUA[, availability:=sum(ifelse(is.na(Value),0,Value)* 
                             ifelse(measuredElement=="51", 1,
                                    ifelse(measuredElement=="61",1,
-                                          ifelse(measuredElement=="91", -1, 
-                                                 ifelse(measuredElement=="101", -1,  
-                                                        ifelse(measuredElement=="71", -1,
-                                                               ifelse(measuredElement=="151", -1,
-                                                                      ifelse(measuredElement=="141", -1,
-                                                                             ifelse(measuredElement=="121", -1,
-                                                                                    ifelse(measuredElement=="111", -1,
-                                                                      ifelse(measuredElement=="131", -1,0 ))))))) )) ) ), 
+                                          ifelse(measuredElement=="91", -1, 0)))), 
       by=c("geographicAreaM49_fi","ics",  "timePointYears")]
   
   
@@ -457,10 +396,7 @@ for(j in seq_along(countries)) {
   SUA[, availability:=sum(ifelse(is.na(Value),0,Value)* 
                             ifelse(measuredElement=="51", 1,
                                    ifelse(measuredElement=="61",1,
-                                          ifelse(measuredElement=="91",-1, 
-                                                 ifelse(measuredElement=="101", -1,  
-                                                        ifelse(measuredElement=="71", -1,
-                                                                ifelse(measuredElement=="131", -1,0 ))))))),  
+                                          ifelse(measuredElement=="91", -1, 0)))), 
       by=c("geographicAreaM49_fi","ics",  "timePointYears")]
   
   ### Step 2. Compute Food Processing 
@@ -472,10 +408,9 @@ for(j in seq_along(countries)) {
   #lev=findProcessingLevel(commodityTree, from="parent", to="child", aupusParam = list(itemVar="parent"))
   #commodityTreeLev0=commodityTree[parent %in% lev[processingLevel==0, parent],]
   
-  commodityTree=fread(paste0("data/localRun/commodityTree/tree_", currentCountry, ".csv")  )
-  
-  #commodityTree=commodityTree[!(parent=="1515" & child=="1518")]
-  #commodityTree=commodityTree[!(parent=="1517" & child=="1518")]
+  commodityTree=fread(paste0("data/TreeCountrySpecific/tree_", currentCountry, ".csv")  )
+  commodityTree=commodityTree[!(parent=="1515" & child=="1518")]
+  commodityTree=commodityTree[!(parent=="1517" & child=="1518")]
 
   commodityTree[,geographicAreaM49_fi:=as.character(geographicAreaM49_fi)]
   commodityTree[,parent:=as.character(parent)]
@@ -485,7 +420,7 @@ for(j in seq_along(countries)) {
   SUA[,timePointYears:=as.character(timePointYears)]
   
   SUA = processingCompute(SUA,commodityTree)
-  #SUA = processingComputeSimplified(SUA,commodityTree)
+  
   
   ###################################################################################################### 
   
@@ -496,15 +431,13 @@ for(j in seq_along(countries)) {
                                    ifelse(measuredElement=="61",1,
                                           ifelse(measuredElement=="91", -1,
                                                  ifelse(measuredElement=="131", -1,
-                                                        ifelse(measuredElement=="71", -1,  
-                                                               ifelse(measuredElement=="101", -1,  0))))))), 
+                                                        ifelse(measuredElement=="71", -1, 0) ))))), 
       by=c("geographicAreaM49_fi","ics",  "timePointYears")]
   ###################################################################################################### 
   # In theory at the end of this process the sua_unbalanced SWS table should have been created
   # in the meantime, the output populates a local folder
 
-
-# SaveData(domain = "fisheries", dataset = "fi_sua_unbalanced", data = SUA, waitTimeout = 20000)  
+  
   write.csv(SUA, paste0(directory,"/SUA_unbalanced/SUA_unbalanced_",currentCountry , ".csv") )
 
   ######################################################################################################
@@ -512,9 +445,7 @@ for(j in seq_along(countries)) {
   #  This balancing is trivial and NOT correct
   #  Once all the dataset-datatables will be stored in the SWS, the class-inconsitencies should be solved!!
   
- # balancingItems=fread(paste0("C:/Users/ROSA/Desktop/Fisheries/batch0_SUA_pilotCounties/utilizationTables/balancingElements/balancingElements_",currentCountry,".csv"), header = TRUE)
-  balancingItems=fread(paste0("data/localRun/balancingElement/",currentCountry,"_balancingElements.csv"), header = TRUE)
-  
+  balancingItems=fread(paste0("C:/Users/ROSA/Desktop/Fisheries/batch0_SUA_pilotCounties/utilizationTables/balancingElements/balancingElements_",currentCountry,".csv"), header = TRUE)
   balancingItems[, geographicAreaM49_fi:=as.character(geographicAreaM49_fi)]
   balancingItems[, ics:=as.character(ics)]
   balancingItems[, geographicAreaM49_fi:=as.character(geographicAreaM49_fi)]
@@ -559,7 +490,7 @@ for(j in seq_along(countries)) {
   
   sua_unb[[j]]=SUA  
   
-  # SaveData(domain = "fisheries", dataset = "fi_sua_balanced", data = SUA_with_nutrient, waitTimeout = 20000)  
+  
   write.csv(SUA_with_nutrient, paste0(directory,"/SUA_balanced/SUA_balanced_",currentCountry , ".csv") )
 
 }
@@ -709,9 +640,6 @@ final=rbindlist(sua_unb)
   out=out[,.(ics,geographicAreaM49_fi,timePointYears,measuredElement, Value)]
   
   out=rbind(out, nutrient_caput_day)
-  
-  
-  # SaveData(domain = "fisheries", dataset = "fi_fbs", data = out, waitTimeout = 20000)  
   
   write.csv(out,paste0(directory,"/FBS/FBS.csv" , row.names = FALSE))
 

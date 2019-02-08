@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.18 (MiKTeX 2.9.6500 64-bit) (preloaded format=pdflatex 2018.5.2)  6 FEB 2019 18:22
+This is pdfTeX, Version 3.14159265-2.6-1.40.18 (MiKTeX 2.9.6500 64-bit) (preloaded format=pdflatex 2018.5.2)  7 FEB 2019 17:44
 entering extended mode
 **./faoswsFisheryStandardization.tex
 (faoswsFisheryStandardization.tex
@@ -1232,13 +1232,13 @@ Package pdftex.def Info: flow-charts/tree/tree1501.pdf  used on input line 421.
 Package pdftex.def Info: Requested size: 364.19667pt x 233.75946pt on input lin
 e 421.
 <flow-charts/tree/tree1502_level2.pdf, id=219, pagebox=cropbox, 759.83875pt x 5
-05.89pt>
+45.03625pt>
 File: flow-charts/tree/tree1502_level2.pdf Graphic file (type pdf)
 <use flow-charts/tree/tree1502_level2.pdf>
 Package pdftex.def Info: flow-charts/tree/tree1502_level2.pdf  used on input li
 ne 427. on input line 427.
-Package pdftex.def Info: Requested size: 364.19667pt x 242.48479pt on input lin
-e 427.
+Package pdftex.def Info: Requested size: 364.19667pt x 261.2485pt on input line
+ 427.
 
 ! Undefined control sequence.
 l.432 ...by the default extraction rates\footnotes
@@ -1294,7 +1294,7 @@ Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 
 [16]
 ! Undefined control sequence.
-l.537 ...ifferent dissemination purposes\footnotes
+l.536 ...ifferent dissemination purposes\footnotes
                                                   {For R developper: \textit...
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
@@ -1302,24 +1302,24 @@ misspelled it (e.g., `\hobx'), type `I' and the correct
 spelling (e.g., `I\hbox'). Otherwise just continue,
 and I'll forget about whatever was undefined.
 
-<flow-charts/standardization/FAOSTAT_standardization.png, id=289, 838.332pt x 4
+<flow-charts/standardization/FAOSTAT_standardization.png, id=290, 838.332pt x 4
 93.845pt>
 File: flow-charts/standardization/FAOSTAT_standardization.png Graphic file (typ
 e png)
 <use flow-charts/standardization/FAOSTAT_standardization.png>
 Package pdftex.def Info: flow-charts/standardization/FAOSTAT_standardization.pn
-g  used on input line 543. on input line 543.
+g  used on input line 542. on input line 542.
 Package pdftex.def Info: Requested size: 364.19667pt x 214.54202pt on input lin
-e 543.
-<flow-charts/standardization/FIAS_standardization.png, id=290, 1007.4438pt x 49
+e 542.
+<flow-charts/standardization/FIAS_standardization.png, id=291, 1007.4438pt x 49
 6.254pt>
 File: flow-charts/standardization/FIAS_standardization.png Graphic file (type p
 ng)
 <use flow-charts/standardization/FIAS_standardization.png>
 Package pdftex.def Info: flow-charts/standardization/FIAS_standardization.png  
-used on input line 551. on input line 551.
+used on input line 550. on input line 550.
 Package pdftex.def Info: Requested size: 364.19667pt x 179.39337pt on input lin
-e 551.
+e 550.
 
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 [] \T1/pplx/m/n/10.95 17
@@ -1330,18 +1330,19 @@ Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 
 \AtBegShi@Output ...ipout \box \AtBeginShipoutBox 
                                                   \fi \fi 
-l.562 \item W
-             aste; <./flow-charts/standardization/FAOSTAT_standardization.png>]
-<flow-charts/standardization/FIAS_standardization2.png, id=299, 1007.4438pt x 4
+l.563 \end{itemize}
+                    <./flow-charts/standardization/FAOSTAT_standardization.png>
+]
+<flow-charts/standardization/FIAS_standardization2.png, id=300, 1007.4438pt x 4
 96.254pt>
 File: flow-charts/standardization/FIAS_standardization2.png Graphic file (type 
 png)
 <use flow-charts/standardization/FIAS_standardization2.png>
 Package pdftex.def Info: flow-charts/standardization/FIAS_standardization2.png 
- used on input line 569. on input line 569.
+ used on input line 568. on input line 568.
 Package pdftex.def Info: Requested size: 364.19667pt x 179.39337pt on input lin
-e 569.
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 576.
+e 568.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 575.
 
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 \T1/pplx/m/n/10.95 18 []
@@ -1352,20 +1353,20 @@ Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 
 \AtBegShi@Output ...ipout \box \AtBeginShipoutBox 
                                                   \fi \fi 
-l.576 \end{document}
+l.575 \end{document}
                     pdfTeX warning (ext4): destination with the same identifier
  (name{figure.8}) has been already used, duplicate ignored
 
 \AtBegShi@Output ...ipout \box \AtBeginShipoutBox 
                                                   \fi \fi 
-l.576 \end{document}
+l.575 \end{document}
                      <./flow-charts/standardization/FIAS_standardization.png> <
 ./flow-charts/standardization/FIAS_standardization2.png>]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 576.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 575.
 
 (faoswsFisheryStandardization.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 576.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 576.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 575.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 575.
 Package rerunfilecheck Info: File `faoswsFisheryStandardization.out' has not ch
 anged.
 (rerunfilecheck)             Checksum: 7709251981DEB100A706B5D3EAD21969;1438.
@@ -1373,7 +1374,7 @@ anged.
 
 LaTeX Warning: There were multiply-defined labels.
 
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 576.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 575.
  ) 
 Here is how much of TeX's memory you used:
  18914 strings out of 493312
@@ -1390,9 +1391,9 @@ X/2.9/fonts/type1/public/mathpazo/fplmr.pfb><C:/Program Files/MiKTeX 2.9/fonts/
 type1/urw/palatino/uplb8a.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/urw/pala
 tino/uplr8a.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/urw/palatino/uplri8a.p
 fb>
-Output written on faoswsFisheryStandardization.pdf (18 pages, 1004374 bytes).
+Output written on faoswsFisheryStandardization.pdf (18 pages, 1012690 bytes).
 PDF statistics:
- 353 PDF objects out of 1000 (max. 8388607)
+ 354 PDF objects out of 1000 (max. 8388607)
  86 named destinations out of 1000 (max. 500000)
  141 words of extra memory for PDF output out of 10000 (max. 10000000)
 

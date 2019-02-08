@@ -477,7 +477,7 @@ $$
 
 where \textit{i} runs over the processed and preserved commodity.}
 
-\item Once \textit{input} for all processed and preserve commodities has  been computed, its aggregation, by parent, corresponds to the overall quantity of primary item that has been used to produce derived items. In other word it corresponds to the primary \textit{processing (131)} component.
+\item Once \textit{input} for all processed and preserve commodities has  been computed (actually missing), its aggregation, by parent, corresponds to the overall quantity of primary item that has been used to produce derived items. In other word it corresponds to the primary \textit{processing (131)} component.
 Table 5. summarizes this procedure, it refers to the commodity tree of  \textit{ Pelagic Marine Fish Fresh (1527)}. The table shows that \textit{Pelagic Frozen Whole (1528)},   \textit{Pelagic Cured (1531)},   \textit{Pelagic Canned (1532)},   and \textit{Pelagic Meals (1534)} have been produced  using as input  \textit{ Pelagic Marine Fish Fresh (1527)} in Greece in 2013.
 
 \begin{table}[t]
@@ -506,7 +506,7 @@ Processing (1527)         &               &                 &               &   
 
 The choice of the alternative parent item to be used as input depends once again in the commodity tree. The active parent-child connections depend on the past SUA equations. 
 
-The rationale is to keep at primary level only the amount of \textit{processed} that balance the priamary SUA equation and to deviate the exceeding quantity \footnote{Note that the amout to be deviated onto an alternative parent items (which is not a primary product) has to be multiplied by the extraction rate since it is expressed in terms of \textit{secondary parent} equivalent.} onto an alternative parent item.
+The rationale is to keep at primary level only the amount of \textit{processed} that balance the priamary SUA equation and to deviate the exceeding quantity \footnote{Note that the amout of processed to be deviated onto an alternative parent items (which is not a primary product) has to be multiplied by the extraction rate since it has to be expressed in terms of \textit{secondary parent} equivalent.} onto an alternative parent item.
 
 \end{itemize}
 
@@ -554,12 +554,11 @@ The \textit{Standardization} is the process of expressing all the
 processed commodities in terms of their primary equivalent and to add up all the calories of the
 food commodities. One of the most important uses of the FBS consists indeed of measuring the overall average calorie supply in a country. 
 
-The Dietary Energy Supply (DES) is not only a standard output of the FBS, but also the key input into the FAO indicator of undernourishment, i.e. the number of undernourished people and the prevalence of undernourishment. The DES enters the prevalence of undernourishment measurement as the mean of a distribution, which, together with a cut-off point – the minimum dietary energy requirement – allows to calculate the number and percentage of people in a population without access to sufficient calories.
-
+The Dietary Energy Supply (DES) is not only a standard output of the FBS, but also the key input into the FAO indicator of undernourishment, i.e. the number of undernourished people and the prevalence of undernourishment. 
 In addition the FBS contains a complete picture of the source of consumption on that primary item in all its forms. This procedure allows comparisons among the various processed items deriving from the same primary item, across time and countries.
 
 
-Some differences occur in the way standardization is carried out according to FIAS and FAOSTAT methodologies. This difference mainly consists in the way trade data are handled, taking into account both edible and inedible products (as in FAOSTAT) or only the edible component (as in FIAS). The final result of the total food fish supply and per capita food fish supply is practically identical.  
+Some differences occur in the way standardization is carried out according to FIAS and FAOSTAT methodologies. This difference mainly consists in the way \textit{meals} data are handled, and in taking into account both edible and inedible products (as in FAOSTAT) or only the edible component (as in FIAS). The final result of the total food fish supply and per capita food fish supply is practically identical.  
 
 The both approaches have to be implemented and their output will be used for different dissemination purposes\footnotes{For R developper: \textit{fisheryStandardizeTree} is the function that has been developped to performe the Standardization, at the moment the focus is on the FAOSTAT methodology}.
 

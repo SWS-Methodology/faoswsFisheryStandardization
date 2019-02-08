@@ -37,7 +37,7 @@ suppressMessages( {
 })
 ```
 
-The version of the Global Production dataset currently stored in QA does not match with the last realise.
+The version of the Global Production dataset currently stored in QA does not match with the last release.
 The first GetData pulls data from the Prod env (see as confirmation the the sws1.yml file):
 
 ```{r, eval=FALSE}
@@ -60,7 +60,7 @@ if(CheckDebug()){
   
 }
 ````
-Please 
+
 
 
 The list of countries the plugin will work on, depends on the query the user set in creating the session
@@ -152,7 +152,7 @@ After pulling the Global production data for the country of interest, move to th
   }
   
 ````  
-I aggregate the data referring to FishingArea:
+Aggregate the data referring to FishingArea:
 
 ```{r, eval=FALSE}
   globalProduction=globalProduction[,sum(Value, na.rm = TRUE), by=c("geographicAreaM49_fi",
@@ -172,7 +172,7 @@ Reading the mapping table from the SWS. The following datatables:
 1. fishery_item_mapping
 2. fishery_primary_mapping
 
-have been created by the SWS team (Francesca) starting from the 
+These datatables have been created by the SWS team (Francesca) starting from the file Mapping- ICS - ISSCAAP - stored in the SharePoint (Fisheries - Food Balance - Sheets - FIAS team document).
 
 
 ```{r, eval=FALSE}
@@ -196,7 +196,7 @@ TIP: Integrate this info in the data.table  fishery_primary_mapping
   primary = c("1501", "1514", "1527","1540","1553", "1562", "1579",  "1570", "1587", "1594")
 ````
 
-## Populate the SUA unbalanced table: the ICS FAOSTAT classification (chapter 3.1)
+## Populate the SUA unbalanced table: the ICS FAOSTAT classification (section 3.1: Populate the SUA unbalanced table: the ICS FAOSTAT classification)
 ```{r, eval=FALSE}
   globalProductionMapping= as.data.table(inner_join(globalProductionMapping,
                                                     unique(mapping[ics %in%  primary,.(ics,isscaap)]),
@@ -224,36 +224,8 @@ TIP: Integrate this info in the data.table  fishery_primary_mapping
   
   globalProductionMapping=globalProductionMapping[!is.na(ics)]
 ````  
-  ############################################################################################################
- # ##Get Commodity Database, still local files (no commodity )
- # commodityDB_value = fread("data/commodityDB_Value.csv", header = TRUE)
- # ## Re-shape the data in order to have the year-dimension in one column
- # ## Ensure that the Value column is numeric and that the missing values are properly classified as NA
- # ##Value
- # commodityDB_value = melt(
- #   commodityDB_value,
- #   id.vars = colnames(commodityDB_value)[c(1:7)],
- #   measure.vars = colnames(commodityDB_value)[c(8:48)],
- #   variable.name = "timePointYears",
- #   value.name = "Value"
- # )
- # ## Inconsistency in terms of flow codes, trade flows referring to Values have different codes
- # commodityDB_value[, measuredElement := as.character(measuredElement)]
- # commodityDB_value[measuredElement=="91", measuredElement:="92"]
- # commodityDB_value[measuredElement=="61", measuredElement:="62"]
- # commodityDB_value[measuredElement=="51", measuredElement:="52"]
- # commodityDB_value[, Value := as.numeric(Value)]
-  
-  ## Quantity
-  #  KeyCommodityDB = DatasetKey(domain = "Fisheries", dataset = "fi_commodity_db", dimensions = list(
-  #    geographicAreaM49 = Dimension(name = "geographicAreaM49", keys = currentCountry),
-  #    measuredItemISSCFC = Dimension(name = "measuredItemISSCFC", keys = GetCodeList("Fisheries", "fi_commodity_db","measuredItemISSCFC" )[,code]),
-  #    measuredElement = Dimension(name = "measuredElement", keys = c("5510", "5610", "5910")),
-  #    timePointYears = Dimension(name = "timePointYears", keys = as.character(c(startYear:endYear) ))
-  #  ))
-  #  
-  #  ##Get CommodityDB 
-  #  commodityDB_quantity=GetData(KeyCommodityDB)
+ 
+ 
   
 Pull the commodity DB, currently stored locally in the project folder repository:
 
@@ -293,13 +265,14 @@ Commodity Database: ISSCFC_Code on the ICS_Code:
   commodityDB_aggregation = commodityDB_aggregation[!is.na(Value)]
 ````  
 
-Hard- coded solution for China (check if it fits also for other country)
+Hard- coded solution for China (check if it fits also for other country). 
+This chunk highlight the need to develop a pre-link tables. This means that the deviation of some flows occurs before the aggregation in ICS, but at the level of ISSCFC codes. At the moment this table does not exist.
 ```{r, eval=FALSE}  
   if(commodityDB_aggregation[, unique(Country_code)]=="156") {commodityDB_aggregation[isscfc=="034.4.1.5.2.45" & measuredElement=="91", ics:="1543"]}
 ````  
 
 Some commodities are imported but not for food porpuses, main example "ornamental fish". Those flow are
-deviated directly to "other utilizations"
+deviated directly to "other utilizations":
 ```{r, eval=FALSE}  
   otherUses=fread("data/otherUses.csv")
   
@@ -328,7 +301,18 @@ deviated directly to "other utilizations"
                                      Value)]
 ````
 
-## The Link table (see chapter 3.1)
+## The Link table (see section 3.1: Populate the SUA unbalanced table: the ICS FAOSTAT classification)
+
+Once the link table has been read from the SWS, a number of checks must be performed (still not fully developed):
+
+1. Check for percentages, ensure that sum of percentages by 
+2. Ensure that the column flow only contains PRD, IMP, EXP, TRD or ALL. No other flows are admitted.
+
+Since this data.table is manually updated, directly in the SWS, these checks are extremely important because it is might be possible to find typos in the flow column or mistakes in the compilation of the shares.
+
+
+If the link table does not pass all the checks, the process stops and the user should be warned by an email containing as attachment the problematic lines.
+Ideally, the checks should be performed only on the slice of data referring to the current country, in order to not block the process for a country if the mistake is not related to it.
 
 ```{r, eval=FALSE}
   link=ReadDatatable("link_mapping")
@@ -405,14 +389,20 @@ deviated directly to "other utilizations"
     setnames(linkNew,"flow" ,"measuredElement")
 ````
 
-In the previous chuk the link table that has been created to be exactly the same as the one  currently in use in the
-(old) FIAS Working System, is expanded to be used to defiate the proper flow to ad hoc ICS codes.
+In the previous chunk the link table that has been created to be exactly the same as the one  currently in use in the
+(old) FIAS Working System, is expanded to be used to deviate the proper flow to ad hoc ICS codes.
 
 ```{r, eval=FALSE}
     sua_commodityDB[,Country_code:=as.character(Country_code)]
     sua_commodityDB[,timePointYears:=as.integer(as.character(timePointYears) )]
     
-    sua_commodityDB=merge(sua_commodityDB, linkNew, by=c("Country_code","timePointYears", "measuredElement","ics"), all.x = TRUE)
+    sua_commodityDB=merge(sua_commodityDB,
+                          linkNew, by=c("Country_code",
+                                        "timePointYears",
+                                        "measuredElement","ics"),
+                          all.x = TRUE)
+    
+    
     sua_commodityDB[, percentage:=as.numeric(percentage)]
     
     sua_commodityDB[!is.na(percentage), Value:=Value*percentage]
@@ -439,7 +429,7 @@ In the previous chuk the link table that has been created to be exactly the same
 ````
 
 
-Data coming from Global Production and from the Commodity DB are 
+Data coming from Global Production and from the Commodity DB are put together in the same table:
 
 ```{r, eval=FALSE}
   SUA=rbind(sua_commodityDB, globalProductionMapping)
@@ -459,9 +449,9 @@ Data coming from Global Production and from the Commodity DB are
 ````
 
 
-Expand the SUA: many SUA will be populated in the next steps. The most basic operation to populate a missing SUA componet is balancing the SUA equation and assign to the missing component the overall amount of the imbalance.
+Expand the SUA: many SUA will be populated in the next steps. The most basic operation to populate a missing SUA component  is balancing the SUA equation and assign to the missing component the overall amount of the imbalance.
 
-To performe this opoeratio it is necessary to create the empty cells to be filled:
+To perform this operation it is necessary to create the empty cells to be filled:
 ```{r, eval=FALSE}
   key = c("timePointYears", "geographicAreaM49_fi",  "ics")
   keyDataFrame = SUA[, key, with = FALSE]
@@ -482,6 +472,11 @@ To performe this opoeratio it is necessary to create the empty cells to be fille
   
 ````
 
+Protected figures had been extracted from the already existing SUAs (provided as excel file from the FIAS team) and are currently stored in a local folder (in the module repository).
+
+This issue will be managed through the FLAGS. Those figures flagged as protected (see faoswsFlag::flagValidTable ) will be kept and used in the next steps (see also the package: faoswsFlag).
+
+
 ```{r, eval=FALSE}  
   protected=fread(paste0("data/localRun/protected/",currentCountry,"_protected.csv"), header = TRUE)
   protected[,geographicAreaM49_fi:=as.character(geographicAreaM49_fi)]
@@ -497,17 +492,16 @@ To performe this opoeratio it is necessary to create the empty cells to be fille
 ```{r, eval=FALSE}  
   SUA=SUA[timePointYears %in% c(2000:2016)]
 ````  
-Compute the imbalance. It is looked as the **availability**. It is the amont that has not been allocated yet in any utlization and it is still available to be consumed or used as input to produce derived items.
+Compute the imbalance. It is looked as the **availability**. It is the amount that has not been allocated yet in any utilization and it is still available to be consumed or used as input to produce derived items.
 
 ```{r, eval=FALSE}
   
   SUA[, availability:=sum(ifelse(is.na(Value),0,Value)* 
-                            ifelse(measuredElement=="51", 1,
-                                   ifelse(measuredElement=="61",1,
-                                          ifelse(measuredElement=="91", -1, 
-                                                 ifelse(measuredElement=="101", -1,  
-                                                        ifelse(measuredElement=="71", -1,
-                                                                      ifelse(measuredElement=="131", -1,0 ))))))), 
+                          ifelse(measuredElement=="51", 1,
+                          ifelse(measuredElement=="61",1,
+                          ifelse(measuredElement=="91", -1, 
+                          ifelse(measuredElement=="101", -1,  
+                          ifelse(measuredElement=="71", -1,                                                          ifelse(measuredElement=="131", -1,0 ))))))), 
       by=c("geographicAreaM49_fi","ics",  "timePointYears")]
   
   
@@ -526,9 +520,7 @@ In case we identify (in table toBeChecked) some primary negative availabilities,
   
 ````
 Balance the line characterized by negative availabilities increasing the PRODUCTION:
-Before sending all the negative imbalance to Production, we should deviate a small portion of the TOT imbalance
-to stockVariation. This meand that stock is a supply-component and we have to chack that the sum of the series of stock variation 
-is still positive (or equal to zero)
+Before sending all the negative imbalance to Production, it would be possible also to deviate a small portion of the TOT imbalance to stockVariation. This means that stock is a supply-component (if negative). Anyway we have to check that the sum of the series of stock variation is still positive (or equal to zero). 
   
   
 ```{r, eval=FALSE} 
@@ -537,23 +529,22 @@ is still positive (or equal to zero)
 
 ````  
 
-Compute again the imbalance==availability
+Compute again the imbalance==availability: 
 
 ```{r, eval=FALSE}
 
   SUA[, availability:=sum(ifelse(is.na(Value),0,Value)* 
-                            ifelse(measuredElement=="51", 1,
-                                   ifelse(measuredElement=="61",1,
-                                          ifelse(measuredElement=="91",-1, 
-                                                 ifelse(measuredElement=="101", -1,  
-                                                        ifelse(measuredElement=="71", -1,
-                                                                ifelse(measuredElement=="131", -1,0 ))))))),  
+                          ifelse(measuredElement=="51", 1,
+                          ifelse(measuredElement=="61",1,
+                          ifelse(measuredElement=="91",-1, 
+                          ifelse(measuredElement=="101", -1,  
+                          ifelse(measuredElement=="71", -1,                                                          ifelse(measuredElement=="131", -1,0 ))))))),  
       by=c("geographicAreaM49_fi","ics",  "timePointYears")]
 `````  
 
 ## Compute Food Processing (Look at the section 3.3.)
 The Tree structure is quite strange, each processed product can be produced at many different processing levels
-according to the availabilty of the primary, secondary,... For example a canned can be produced starting
+according to the availability of the primary, secondary,... For example, a canned item can be produced starting
 from fresh fish (if it is available) but also from frozen fish (which might have been imported)
  
 ```{r, eval=FALSE}
@@ -573,16 +564,16 @@ from fresh fish (if it is available) but also from frozen fish (which might have
   #SUA = processingComputeSimplified(SUA,commodityTree)
 ```` 
 
-Compute again the Availability including Food Processing in the equation
+Compute again the Availability including Food Processing in the equation:
 ```{r, eval=FALSE}  
   
   SUA[, availability:=sum(ifelse(is.na(Value),0,Value)* 
-                            ifelse(measuredElement=="51", 1,
-                                   ifelse(measuredElement=="61",1,
-                                          ifelse(measuredElement=="91", -1,
-                                                 ifelse(measuredElement=="131", -1,
-                                                        ifelse(measuredElement=="71", -1,  
-                                                               ifelse(measuredElement=="101", -1,  0))))))), 
+                          ifelse(measuredElement=="51", 1,
+                          ifelse(measuredElement=="61",1,
+                          ifelse(measuredElement=="91", -1,
+                          ifelse(measuredElement=="131", -1,
+                          ifelse(measuredElement=="71", -1,  
+                          ifelse(measuredElement=="101", -1,  0))))))), 
       by=c("geographicAreaM49_fi","ics",  "timePointYears")]
 ````
 In theory at the end of this process the sua_unbalanced SWS table should have been created
@@ -595,8 +586,7 @@ in the meantime, the output populates a local folder
 
 
 Allocate the positive imbalance to the possible utilizations:
-This balancing is trivial and NOT correct
-Once all the dataset-datatables will be stored in the SWS, the class-inconsitencies should be solved!!
+
  
 ```{r, eval=FALSE}      
  # balancingItems=fread(paste0("C:/Users/ROSA/Desktop/Fisheries/batch0_SUA_pilotCounties/utilizationTables/balancingElements/balancingElements_",currentCountry,".csv"), header = TRUE)
@@ -635,7 +625,7 @@ SUA=merge(SUA, balancingItems, by=c("geographicAreaM49_fi",
   SUA[, Value_balancing:=NULL]
   
 ````
-Add NutrientFactors
+Add NutrientFactors:
 
 ```{r, eval=FALSE}      
   
@@ -648,6 +638,8 @@ Add NutrientFactors
   SUA_with_nutrient[measuredElement!="141",`:=`(c("calories", "proteins", "fats"),list(0,0,0) )]
 ````
 
+
+Deviate the output to an intermediate file: 
 ```{r, eval=FALSE}    
   sua_unb[[j]]=SUA  
   
@@ -657,10 +649,10 @@ Add NutrientFactors
 }
 ````
  
-Here I am considering the default commodity tree- no country-year specificities: this choice it is not correct.
-The commodity tree that has to be used here is :
+Here I am considering the default commodity tree-no country-year specificities: this choice it is not correct.
+The commodity tree that has to be used to finally perform the standardization had to meet the following requirements:
 1. the so-called ONE-LEVEL tree, all the processed items must be reported in terms of their primary equivalent.
-2. 
+2. if a country provides figures for both input(31) and production (51) the extraction rate is computed (and not the input) on the fly by the module and this latter extraction rate has to be used in the standardization.
 
 ```{r, eval=FALSE}    
 commodityTree = ReadDatatable("fisheries_commodity_tree")
@@ -696,8 +688,12 @@ Loop again along the years: the standardization works on country-year basis.
                                                   standParams = fisheryParams, elements = "Value", zeroWeight= zeroWeight),
                          by = c(fisheryParams$elementVar)]
     
-    
-    
+````
+
+Nutritive elements are obvioulsly associated only to the Food component (141).
+
+
+```{r, eval=FALSE}        
     final_time=merge(final_time, nutrientFactors, by="ics", all.x = TRUE)
     final_time[measuredElement=="141", calories:=Value*calories]
     final_time[measuredElement=="141", proteins:=Value*proteins]
@@ -706,9 +702,13 @@ Loop again along the years: the standardization works on country-year basis.
     final_time[is.na(calories), calories:=0]
     final_time[is.na(proteins), proteins:=0]
     final_time[is.na(fats), fats:=0]
-    
-    #  The following code has to be re-adapted to standardize at primary level the additive elements
-    
+````    
+
+
+Additive elements are Calories, Fats and Proteins  associated to all the items (primary and derived). No need to standardize  these quantities since for both primary and processed items the amount of Calories, Fats and Proteins can be directly summed (it's already expressed in the same unit of measurement).
+
+
+```{r, eval=FALSE}      
     if(length(additiveElements) > 0){
       additiveTree = copy(commodityTreeLev0)
       additiveTree[, c(fisheryParams$extractVar) := 1]
@@ -753,7 +753,11 @@ Loop again along the years: the standardization works on country-year basis.
   
   
   out=rbindlist(out)
+````   
   
+Compute, once again, the final imbalance/availability that should finally be **ZERO**.
+  
+```{r, eval=FALSE}      
   out[, availability:=sum(ifelse(is.na(Value),0,Value)* 
                             ifelse(measuredElement=="51", 1,
                             ifelse(measuredElement=="61",1,
@@ -788,8 +792,12 @@ Convert the ics codes into the FBS codes:
 ````  
   
 ## DES computation (section 4. Nutritive Values and DES calculation)  
+
+
 Get population data.
-Note that the the Population to be taken in consideration comes from the detaset population UNPD - 2017 release.
+Note that the  Population to be taken in consideration comes from the detaset population UNPD - 2017 release.
+
+
 
 ```{r, eval=FALSE}    
   elemKeys="511"
@@ -805,6 +813,7 @@ Note that the the Population to be taken in consideration comes from the detaset
   setnames(popSWS,"geographicAreaM49","geographicAreaM49_fi")
 ````
 
+Divide the overall amount of calories (by ICS group) by the population and by 365 (number of days in one year):
 
 ```{r, eval=FALSE} 
   out[,measuredElement:=as.character(measuredElement)]
