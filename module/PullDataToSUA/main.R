@@ -24,10 +24,6 @@
 
 ## load the library
 library(faosws)
-<<<<<<< HEAD
-=======
-library(faoswsModules)
->>>>>>> 2b5bd370ef208233830f02597b0fb0f518addcb1
 library(data.table)
 library(faoebx5)
 library(readxl)
