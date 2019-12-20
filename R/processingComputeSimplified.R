@@ -33,6 +33,7 @@ processingComputeSimplified =function(data ,tree){
   ## in the commodity tree has to be updated:
   
   dataProd=data[measuredElement=="51"]
+  
   dataInput=data[measuredElement=="31"]
   #dataProcessing=data[measuredElement=="131"]
   
@@ -60,10 +61,10 @@ processingComputeSimplified =function(data ,tree){
   data1[measuredElement_child=="51", input:=Value_child/extraction_rate]
   
   data_compute31= melt(data1,
-              id.vars = colnames(data1[,1:3]),
-              measure.vars = colnames(data1[,9]),
-              value.name = "Value" ,
-              variable.name = "measuredElement", variable.factor = FALSE)
+                       id.vars = colnames(data1[,1:3]),
+                       measure.vars = colnames(data1[,9]),
+                       value.name = "Value" ,
+                       variable.name = "measuredElement", variable.factor = FALSE)
   
   
   
@@ -76,7 +77,7 @@ processingComputeSimplified =function(data ,tree){
   setnames(data_compute31, "child", "ics")
   
   data_compute31 = merge(protectedInput, data_compute31, by=c("geographicAreaM49_fi","ics", "timePointYears","measuredElement"),
-        suffixes = c("_protected", "_computed"))
+                         suffixes = c("_protected", "_computed"))
   
   data_compute31[is.na(Value_protected) & !is.na(Value_computed), Value_protected:=Value_computed]
   data_compute31[, Value_computed:=NULL]
@@ -87,7 +88,9 @@ processingComputeSimplified =function(data ,tree){
   
   ###################################################################
   ###################################################################
-  data=rbind(data, data_compute31)
+  data=rbind(data, data_compute31[, 1:6, with = FALSE]) #rbind(data, data_compute31) #
+  colnames(data_compute31)
+  
   data[measuredElement=="31", availability:=NA]
   
   
@@ -95,11 +98,12 @@ processingComputeSimplified =function(data ,tree){
   setnames(data_compute131, "ics", "child")
   data_compute131=merge(data_compute131, treePrimary, by=c("geographicAreaM49_fi","child", "timePointYears"))
   
-  
+  # All input are expressed in primary equivalent so the processing quantity is obtained 
+  # summing by country, year all the input with the same primary parent.
   
   data_compute131[ measuredElement=="31" , processing:=sum(Value, na.rm = TRUE), by=c("geographicAreaM49_fi",
-                                                               "timePointYears",
-                                                               "parent")]
+                                                                                      "timePointYears",
+                                                                                      "parent")]
   
 
   data_compute131=data_compute131[,.(geographicAreaM49_fi, parent,timePointYears, processing)]
@@ -107,7 +111,7 @@ processingComputeSimplified =function(data ,tree){
   data_compute131=data_compute131[!is.na(processing)]
   data_compute131=data_compute131[!duplicated(data_compute131)]
   
-
+  
   setnames(data_compute131, "parent", "ics")
   
   ## The 'food processing' has been just computed for any Primary Parent, 
@@ -117,7 +121,7 @@ processingComputeSimplified =function(data ,tree){
   ## a negative unbalance.
   
   data_compute131=merge(data, data_compute131, by=c( "geographicAreaM49_fi","ics","timePointYears"), all.x = TRUE)
- 
+  
   #protected_131=data[!is.na(Value) & measuredElement=="131"]
   #protected_131=protected_131[,.(geographicAreaM49_fi,  ics ,timePointYears ,measuredElement,  Value)]
   #protected_131=protected_131[!duplicated(protected_131)]
@@ -128,42 +132,46 @@ processingComputeSimplified =function(data ,tree){
   #data_compute131=data_compute131[!is.na(availability)]
   
   ## SeconLevelProcessing is computed to evaluate which primary availabilities are lower than the 
-  ## fodd processing.
+  ## food processing.
   
   data_compute131[, secondLevelProcessing:=availability-processing]
   
+  # Lower the processing for the primary parent if availability is lower than processing 
   data_compute131[secondLevelProcessing<0, processing:=processing + secondLevelProcessing ]
   
-  
   ##
+  # secondLevelProcessing contains only data for which the processing was higher than the availability
+  
   secondLevelProcessing=data_compute131[secondLevelProcessing<0]
   setnames(secondLevelProcessing, "ics", "parent")
   toDeviate = merge(secondLevelProcessing,tree, by=c("parent", "geographicAreaM49_fi","timePointYears"))
   setnames(toDeviate, c("parent","child"), c("parent_primary","parent_secondary"))
   toDeviate=toDeviate[,.(parent_secondary, geographicAreaM49_fi, timePointYears, availability ,processing ,secondLevelProcessing)]
   secondary=tree[!parent %in% primary, unique(parent)]
-  toDeviate = toDeviate[parent_secondary %in% secondary]
   
+  # Keep a child only if it can also be a (secondary) parent
+  toDeviate = toDeviate[parent_secondary %in% secondary]
   setnames(tree, "child", "parent_secondary")
   toDeviate = merge(toDeviate , tree, by=c("geographicAreaM49_fi", "parent_secondary", "timePointYears"))
   
+  # Convert processing to secondary equivalent
   toDeviate[, secondLevelProcessing:= (secondLevelProcessing * extraction_rate)*(-1)]
   toDeviate = toDeviate[,.(geographicAreaM49_fi, parent_secondary, timePointYears, secondLevelProcessing)]
   
   ##
   toDeviate= melt(toDeviate,
-                       id.vars = colnames(toDeviate[,1:3]),
-                       measure.vars = colnames(toDeviate[,4]),
-                       value.name = "Value" ,
-                       variable.name = "measuredElement", variable.factor = FALSE)
+                  id.vars = 1:3,# colnames(toDeviate[,1:3]),
+                  measure.vars = colnames(toDeviate[,4]),
+                  value.name = "Value" ,
+                  variable.name = "measuredElement", variable.factor = FALSE)
   
-  
+  # Processing in terms of secondary equivalent with, as parent, secondary ICS
   toDeviate[measuredElement=="secondLevelProcessing", measuredElement:="131"]
   setnames(toDeviate, "parent_secondary", "ics")
- 
-  ## 
+  
+  ## Take the processing part with primary equivalent
   data_compute131= melt(data_compute131,
-                        id.vars = colnames(data_compute131[,1:3]),
+                        id.vars = 1:3,#colnames(data_compute131[,1:3]),
                         measure.vars = "processing",
                         value.name = "Value" ,
                         variable.name = "measuredElement", variable.factor = FALSE)
@@ -179,7 +187,7 @@ processingComputeSimplified =function(data ,tree){
   data = data[measuredElement!="131",]
   data = data[,.(geographicAreaM49_fi,timePointYears,  measuredElement, ics, Value) ]
   data=rbind(data, data_compute131)
- 
+  
   return(data)
   
   

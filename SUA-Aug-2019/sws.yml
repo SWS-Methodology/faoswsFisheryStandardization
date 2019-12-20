@@ -1,0 +1,17 @@
+current: qa
+qa:
+
+  certdir: C:/Users/Taglionic/Documents/Github/.R/QA
+  server: https://hqlqasws1.hq.un.fao.org:8181/sws
+ # token: 460220a7-9821-4d68-b429-d88ad3f73470
+  #token: 2ef045e2-42c3-430f-9f8f-0cd424711b0a
+  token : b6cc0f18-9334-4d9f-bf31-226c9a05ea5b
+  share: "Z:"
+  
+  
+production:
+  certdir: C:/Users/Taglionic/Documents/Github/.R/Production
+  server: https://hqlprswsas1.hq.un.fao.org:8181/sws
+  token: 06fe7ed4-08c8-4123-9ffb-a165289e7142
+  share: "Z:"
+    

@@ -1,0 +1,17 @@
+isscfc,label,ics,measured_element_orig,measured_element_dest,fias_code
+034.1.1,"Fish live, not for human consumption",1540,5610,5166,151
+034.1.1.1,Fish for ornamental purposes,1540,5610,5166,151
+034.1.1.1.11,Ornamental freshwater fish,1501,5610,5166,151
+034.1.1.1.12,Ornamental saltwater fish,1540,5610,5166,151
+034.1.1.1.19,Ornamental fish nei,1540,5610,5166,151
+034.1.1.2,Fish for culture,1501,5610,5525,111
+034.1.1.2.90,"Fish for culture incl. ova, fingerlings etc.",1540,5610,5525,111
+036.0.1.1,"Crustaceans live, not for human consumption",1553,5610,5525,111
+036.0.1.1.1,"Miscellaneous crustaceans live, not for human consumption",1553,5610,5525,111
+036.0.1.1.1.10,"Crustaceans live, for breeding and other purposes, nei",1553,5610,5525,111
+036.0.1.1.1.50,"Shrimps, prawns live, for breeding and other purposes",1553,5610,5525,111
+036.0.3.1,"Crustaceans and molluscs, live, for breeding and other purposes",1553,5610,5525,111
+036.0.3.1.90,"Crustaceans and molluscs, live, for breeding and other purposes, nei",1553,5610,5525,111
+036.0.2.1,"Molluscs live, not for human consumption",1562,5610,5525,111
+036.0.2.1.9,"Miscellaneous molluscs live, not for human consumption",1562,5610,5525,111
+036.0.2.1.9.90,"Molluscs live, spat, for breeding and other purposes, nei",1562,5610,5525,111

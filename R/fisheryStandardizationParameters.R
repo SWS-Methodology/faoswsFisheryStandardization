@@ -23,15 +23,15 @@ fisheryStandardizationParameters =function(){
     childVar = "child",
     parentVar = "parent",
     extractVar = "extraction_rate",
-    productionCode = "51",
-    importCode = "61",
-    exportCode = "91",
-    stockCode = "71",
-    foodCode = "141",
-    foodProcCode = "131",
-    feedCode = "101",
-    baitingCode = "111",
-    wasteCode = "121",
-    residualCode = "151"
+    productionCode = "5515",
+    importCode = "5610",
+    exportCode = "5910",
+    stockCode = "5071",
+    foodCode = "5141",
+    foodProcCode = "5023",
+    feedCode = "5520",
+    baitingCode = "5525",
+    wasteCode = "5016",
+    residualCode = "5166"
   )
 }
