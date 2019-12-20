@@ -170,8 +170,7 @@ FIAS code  & label & proposed code & proposed label                    \\
 
 51   &	Production     & 5510 & Production                             \\
 61   &	Imports - Qty  & 5610 & Import Quantity [t]                    \\
-62   &	Imports - Val  &      &                                        \\
-
+62   &	Imports - Val  &   &
 91   &	Exports - Qty  & 5910 & Export Quantity [t]                    \\
 92   &	Exports - Val  &      &                                        \\
                   
@@ -318,7 +317,7 @@ suppressMessages( {
   library(faosws)
   library(data.table)
   library(shiny)
-  library(faoswsStandardization)
+  # library(faoswsStandardization)
   library(faoswsProcessing)
   library(faoswsUtil)
   library(faoswsModules)
@@ -331,7 +330,7 @@ suppressMessages( {
 
 if(CheckDebug()){
     
-    SETTINGS = ReadSettings("sws.yml")
+    SETTINGS = ReadSettings("sws1.yml")
     
     ## If you're not on the system, your settings will overwrite any others
     R_SWS_SHARE_PATH = SETTINGS[["share"]]

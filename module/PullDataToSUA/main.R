@@ -25,20 +25,11 @@
 ## load the library
 library(faosws)
 library(data.table)
-library(faoebx5)
-library(readxl)
-library(faoswsStandardization)
 
-
-#-- Needed datasets ----
-
-## Get global production (from Production environment)
-
-message("Pulling data from Global production")
-
+#-- Token QA ----
 if(CheckDebug()){
   
-  SETTINGS = ReadSettings("module/pullDataToSUA/sws1.yml")
+  SETTINGS = ReadSettings("sws.yml")
   
   ## If you're not on the system, your settings will overwrite any others
   R_SWS_SHARE_PATH = SETTINGS[["share"]]
@@ -50,23 +41,30 @@ if(CheckDebug()){
   GetTestEnvironment(baseUrl = SETTINGS[["server"]],
                      token = SETTINGS[["token"]])
   
-  startYear = 2000
-  endYear   = 2016
-  
 }
 
-# TEST COUNTRIES
-currentCountry <- c("156", "300", "203", "40")
+#-- Parameters ----
+message("Getting parameters")
+
+# start and end year for standardization come from user parameters
+sessionCountry <- swsContext.datasets[[1]]@dimensions$geographicAreaM49_fi@keys 
+yearVals <- swsContext.datasets[[1]]@dimensions$timePointYears@keys
+
+
+#-- Needed datasets ----
+
+## Get global production (from Production environment)
+
+message("Pulling data from Global production")
 
 keyDim <- c("geographicAreaM49_fi", "fisheriesAsfis", "measuredElement", "timePointYears")
 
 KeyGlobal <- DatasetKey(domain = "Fisheries", dataset = "fi_global_production", dimensions = list(
-  geographicAreaM49_fi = Dimension(name = "geographicAreaM49_fi", keys = currentCountry),
+  geographicAreaM49_fi = Dimension(name = "geographicAreaM49_fi", keys = sessionCountry),
   fisheriesAsfis = Dimension(name = "fisheriesAsfis", keys = GetCodeList("Fisheries", "fi_global_production","fisheriesAsfis" )[,code]),
   fisheriesCatchArea = Dimension(name = "fisheriesCatchArea", keys = GetCodeList("Fisgheries", "fi_global_production","fisheriesCatchArea" )[,code]),
   measuredElement = Dimension(name = "measuredElement", keys = c("FI_001")),
-  timePointYears = Dimension(name = "timePointYears", keys = as.character(c(startYear:endYear) ))
-))
+  timePointYears = Dimension(name = "timePointYears", keys = yearVals )))
 
 globalProduction <- GetData(KeyGlobal)
 
@@ -100,31 +98,12 @@ if(any(globalProduction$measuredElement != "5510") ){
 ## Get Commodities data (from QA environment)
 
 message("Pulling data from Commodites dataset")
-if(CheckDebug()){
-  
-  SETTINGS = ReadSettings("sws.yml")
-  
-  ## If you're not on the system, your settings will overwrite any others
-  R_SWS_SHARE_PATH = SETTINGS[["share"]]
-  
-  ## Define where your certificates are stored
-  SetClientFiles(SETTINGS[["certdir"]])
-  
-  ## Get session information from SWS. Token must be obtained from web interface
-  GetTestEnvironment(baseUrl = SETTINGS[["server"]],
-                     token = SETTINGS[["token"]])
-  
-  startYear = 2000
-  endYear   = 2016
-  
-}
 
-
-KeyComm <- DatasetKey(domain = "Fisheries Commodities", dataset = "commodities_total_validated_test", dimensions = list(
-  geographicAreaM49_fi = Dimension(name = "geographicAreaM49_fi", keys = GetCodeList("FisheriesCommodities", "commodities_total","geographicAreaM49_fi" )[,code]),
+KeyComm <- DatasetKey(domain = "Fisheries Commodities", dataset = "commodities_total", dimensions = list(
+  geographicAreaM49_fi = Dimension(name = "geographicAreaM49_fi", keys = sessionCountry),
   measuredItemISSCFC = Dimension(name = "measuredItemISSCFC", keys = GetCodeList("FisheriesCommodities", "commodities_total","measuredItemISSCFC" )[,code]),
   measuredElement = Dimension(name = "measuredElement", keys = GetCodeList("FisheriesCommodities", "commodities_total","measuredElement" )[,code]),
-  timePointYears = Dimension(name = "timePointYears", keys = GetCodeList("FisheriesCommodities", "commodities_total","timePointYears" )[,code])))
+  timePointYears = Dimension(name = "timePointYears", keys = yearVals )))
 
 
 ## It should be the commodity DB validated
@@ -142,65 +121,72 @@ commodityDB$flagObservationStatus <- factor(commodityDB$flagObservationStatus,
 # No need of value elements "5622" and "5922"
 commodityDB <- commodityDB[!measuredElement %in% c("5622", "5922")]
 
-#-- Connoect to EBX for updated mapping ----
+# #-- Connect to EBX for updated mapping ----
+# 
+# # user = Fishery-SOAP
+# # password = W8EqZpDM4YBMKsrq 
+# message("Connecting to EBX5 and creating mappings")
+# 
+# SetEBXCredentials(username = 'Fishery-SOAP',  password = 'W8EqZpDM4YBMKsrq',  new = T)
+# 
+# #-- Commodity mapping ----
+# # Get ISSCFC codes
+# isscfcList <- ReadEBXCodeList(cl_name = "ISSCFC")
+# isscfc <- isscfcList[, .(Identifier, Code)]
+# 
+# # Get ICS codes
+# icsList <- ReadEBXCodeList(cl_name = "FAOSTAT_Level2")
+# ics <- icsList[ , .(Identifier, FAOSTAT_Code)]
+# 
+# # Get mapping ICS-ISSCFC
+# ics2isscfc <- ReadEBXGroup(gr_name = "Group_FAOSTATL2_ISSCFC")
+# 
+# map_isscfc <- merge(ics2isscfc, ics, by.x = "Group", by.y = "Identifier")
+# map_isscfc <- merge(map_isscfc, isscfc, by.x = "Member", by.y = "Identifier")
+# 
+# # Keep only needed dimensions and put right names
+# map_isscfc <- map_isscfc[,.(FAOSTAT_Code, Code)]
+# setnames(map_isscfc, names(map_isscfc), c("ics", "measuredItemISSCFC"))
+# 
+# #-- Species mapping ----
+# # Get Asfis alphacodes
+# asfisList <- ReadEBXCodeList(cl_name = "SpeciesItem")
+# asfis <- asfisList[, .(Identifier, Alpha.Code, NAME_en)]
+# 
+# # Get ISSCAAP groups codes
+# isscaapList <- ReadEBXCodeList(cl_name ="SpeciesIsscaapGroup")
+# isscaap <- isscaapList[, .(Identifier, ISSCAAP_Code )]
+# 
+# # Get mapping ASFIS-ISSCAAP
+# isscaap2asfis <- ReadEBXGroup(gr_name = "Group_IsscaapGrp_Item")
+# 
+# #Get ICS groups for Species
+# ics4asfisList <- ReadEBXCodeList(cl_name = "SpeciesFaostat")
+# ics4asfis <- ics4asfisList[, .(Identifier, Faostat.ID)]
+# # Get mapping ICS-ISSCAAP
+# ics2isscaap <- ReadEBXGroup(gr_name = "Group_Faostat_IsscaapGrp")
+# setnames(ics2isscaap, names(ics2isscaap), c("ics", "isscaap"))
+# 
+# # Merge ASFIS-ISSCAAP
+# map_asfis <- merge(isscaap2asfis, isscaap, by.x = "Group", by.y = "Identifier")
+# map_asfis <- merge(map_asfis, asfis, by.x = "Member", by.y = "Identifier")
+# # Add ICS
+# map_asfis <- merge(map_asfis, ics2isscaap, by.x = "Group", by.y = "isscaap")
+# map_asfis <- merge(map_asfis, ics4asfis, by.x = "ics", by.y = "Identifier")
+# 
+# # Keep only needed dimensions and put right names
+# map_asfis <- map_asfis[, .(Faostat.ID, ISSCAAP_Code, Alpha.Code, NAME_en)]
+# setnames(map_asfis, names(map_asfis), c("ics", "isscaap", "fisheriesAsfis", "description"))
 
-# user = Fishery-SOAP
-# password = W8EqZpDM4YBMKsrq 
-message("Connecting to EBX5 and creating mappings")
+# Get datatables that correspond to the EBX code
+map_isscfc <- ReadDatatable('map_isscfc')
+setnames(map_isscfc, "measured_item_isscfc", "measuredItemISSCFC")
 
-SetEBXCredentials(username = 'Fishery-SOAP',  password = 'W8EqZpDM4YBMKsrq',  new = T)
-
-#-- Commodity mapping ----
-# Get ISSCFC codes
-isscfcList <- ReadEBXCodeList(cl_name = "ISSCFC")
-isscfc <- isscfcList[, .(Identifier, Code)]
-
-# Get ICS codes
-icsList <- ReadEBXCodeList(cl_name = "FAOSTAT_Level2")
-ics <- icsList[ , .(Identifier, FAOSTAT_Code)]
-
-# Get mapping ICS-ISSCFC
-ics2isscfc <- ReadEBXGroup(gr_name = "Group_FAOSTATL2_ISSCFC")
-
-map_isscfc <- merge(ics2isscfc, ics, by.x = "Group", by.y = "Identifier")
-map_isscfc <- merge(map_isscfc, isscfc, by.x = "Member", by.y = "Identifier")
-
-# Keep only needed dimensions and put right names
-map_isscfc <- map_isscfc[,.(FAOSTAT_Code, Code)]
-setnames(map_isscfc, names(map_isscfc), c("ics", "measuredItemISSCFC"))
-
-#-- Species mapping ----
-# Get Asfis alphacodes
-asfisList <- ReadEBXCodeList(cl_name = "SpeciesItem")
-asfis <- asfisList[, .(Identifier, Alpha.Code, NAME_en)]
-
-# Get ISSCAAP groups codes
-isscaapList <- ReadEBXCodeList(cl_name ="SpeciesIsscaapGroup")
-isscaap <- isscaapList[, .(Identifier, ISSCAAP_Code )]
-
-# Get mapping ASFIS-ISSCAAP
-isscaap2asfis <- ReadEBXGroup(gr_name = "Group_IsscaapGrp_Item")
-
-#Get ICS groups for Species
-ics4asfisList <- ReadEBXCodeList(cl_name = "SpeciesFaostat")
-ics4asfis <- ics4asfisList[, .(Identifier, Faostat.ID)]
-# Get mapping ICS-ISSCAAP
-ics2isscaap <- ReadEBXGroup(gr_name = "Group_Faostat_IsscaapGrp")
-setnames(ics2isscaap, names(ics2isscaap), c("ics", "isscaap"))
-
-# Merge ASFIS-ISSCAAP
-map_asfis <- merge(isscaap2asfis, isscaap, by.x = "Group", by.y = "Identifier")
-map_asfis <- merge(map_asfis, asfis, by.x = "Member", by.y = "Identifier")
-# Add ICS
-map_asfis <- merge(map_asfis, ics2isscaap, by.x = "Group", by.y = "isscaap")
-map_asfis <- merge(map_asfis, ics4asfis, by.x = "ics", by.y = "Identifier")
-
-# Keep only needed dimensions and put right names
-map_asfis <- map_asfis[, .(Faostat.ID, ISSCAAP_Code, Alpha.Code, NAME_en)]
-setnames(map_asfis, names(map_asfis), c("ics", "isscaap", "fisheriesAsfis", "description"))
+map_asfis <- ReadDatatable('map_asfis')
+setnames(map_asfis, "asfis", "fisheriesAsfis")
 
 #-- Start processing global production ----
-
+message('Start processing global production')
 # Map to ICS
 globalProductionMapping <- merge(globalProduction, map_asfis, by = c("fisheriesAsfis"), all.x = TRUE)
 
@@ -229,7 +215,7 @@ globalProductionAggr <- globalProductionMapping[, list(Value = sum(Value, na.rm 
 globalProductionAggr <- globalProductionAggr[!is.na(ics), ]
 
 #-- Start processing commodity DB ----
-
+message('Start processing commodity DB')
 # Map to ICS
 commodityDBIcs <- merge(commodityDB, map_isscfc, by = "measuredItemISSCFC")
 commodityDBIcs$measuredItemISSCFC <- as.character(commodityDBIcs$measuredItemISSCFC)
@@ -250,6 +236,7 @@ commodityDBIcs[ geographicAreaM49_fi == "300" &
 
 
 #-- Link table ----
+message('Link table and other uses deviations')
 # Link table for special period ICS group changes
 link_table <- ReadDatatable("link_table")
 
@@ -323,17 +310,22 @@ commodityDBAggr <- commodityDBotherUses[ , list(Value = sum(Value, na.rm = TRUE)
 #-- SUA ----
 
 SUA <- rbind(globalProductionAggr, commodityDBAggr)
+setnames(SUA, "ics", "measuredItemFaostat_L2")
+
 SUA <- SUA[ , list(Value = sum(Value, na.rm = TRUE),
                    flagObservationStatus = max(flagObservationStatus),
                    flagMethod = "s"), by = list(geographicAreaM49_fi,
                                                 timePointYears,
                                                 measuredElement,
-                                                ics)]
+                                                measuredItemFaostat_L2)]
 
 
-SUA <- SaveData(domain = "FisheriesCommodities", dataset = "fi_sua_unbalanced", data = SUA, waitTimeout = 2000000)
+stats <- SaveData(domain = "FisheriesCommodities", 
+                  dataset = "fi_sua_unbalanced", 
+                  data = SUA, waitTimeout = 2000000)
 
-paste0(stats$inserted, " observations written, ",
+paste0("Pull to SUA process completed successfully!!! ",
+       stats$inserted, " observations written, ",
        stats$ignored, " weren't updated, ",
        stats$discarded, " had problems.")
 

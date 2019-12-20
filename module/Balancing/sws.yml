@@ -1,0 +1,16 @@
+current: qa
+qa:
+
+  certdir: C:/Users/Taglionic/Documents/Github/.R/QA
+  server: https://hqlqasws1.hq.un.fao.org:8181/sws
+  # token: 4d4b37e8-f384-4280-be0f-51b45c5ddda3
+  token: 0927b8c0-bfff-4095-83cb-1e351502e53d # just greece 2016
+  share: "Z:"
+  
+  
+production:
+  certdir: C:/Users/Taglionic/Documents/Github/.R/Production
+  server: https://hqlprswsas1.hq.un.fao.org:8181/sws
+  token: 06fe7ed4-08c8-4123-9ffb-a165289e7142
+  share: "Z:"
+    
